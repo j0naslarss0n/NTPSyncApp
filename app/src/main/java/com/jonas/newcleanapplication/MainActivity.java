@@ -1,30 +1,66 @@
 package com.jonas.newcleanapplication;
 
-import androidx.annotation.IdRes;
-import androidx.appcompat.app.AppCompatActivity;
-
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.Looper;
 import android.widget.TextView;
 
-import org.apache.commons.net.ntp.NTPUDPClient;
-import org.apache.commons.net.ntp.TimeInfo;
+import androidx.appcompat.app.AppCompatActivity;
 
-import java.net.InetAddress;
-import java.net.SocketException;
+import java.sql.Time;
+import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.TimeZone;
 
 
 public class MainActivity extends AppCompatActivity {
 
-
-
+    private TextView ntpTimeTextView;
+    //private Object listener;
 
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-        systemTime();
+        //systemTime();
+
+        ntpTimeTextView = findViewById(R.id.textView);
+
+        // Create a Handler for the main UI thread
+        Handler mainHandler = new Handler(Looper.getMainLooper());
+
+        // Create and start a new thread to fetch NTP time
+        Thread ntpThread = new Thread(() -> {
+            try {
+                SNTPClient.getDate(TimeZone.getTimeZone("Europe/Stockholm"), new SNTPClient.Listener() {
+                    @Override
+                    public void onTimeResponse(String rawDate, Date date, Exception ex) {
+
+
+                        //Date ntpDate = new Date(SNTPClient.getDate();
+                        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+                        //sdf.setTimeZone(TimeZone.getTimeZone("UTC"));
+                        //String ntpTime = "NTP: " + sdf.format(ntpDate);
+                        System.out.println("NTPtime: " + date);
+
+                        // Update the UI on the main thread
+                        mainHandler.post(() -> ntpTimeTextView.setText(sdf.format(date)));
+
+                    }
+                });
+                //SNTPClient sntpClient = new SNTPClient();
+
+            } catch (Exception e) {
+                System.out.println("Systemtime " +" 00:00" );
+                e.printStackTrace();
+
+                // Handle errors, update the UI on the main thread
+                mainHandler.post(() -> ntpTimeTextView.setText("Failed to fetch NTP time"));
+            }
+        });
+        ntpThread.start();
+    }
         /*
         try {
             setNTPTime();
@@ -32,43 +68,7 @@ public class MainActivity extends AppCompatActivity {
             throw new RuntimeException(e);
         }*/
 
-    }
-
-    public void systemTime(){
-        // Hämta fältet som vi vill skriva till
-        //final TextView text1 = (TextView) findViewById(R.id.textview_first);
-        final TextView systemTime =  findViewById(R.id.textView);
-        //text1.setTextSize(30);
-        final Date datum = new Date();
-
-        systemTime.setText((datum.getHours() < 10 ? "0" : "") + datum.getHours()
-                + ":" + (datum.getMinutes() < 10 ? "0" : "") + datum.getMinutes() + ":"
-                + (datum.getSeconds() < 10 ? "0" : "") + datum.getSeconds());
 
     }
 
-    private  Date setNTPTime() throws SocketException {
-        final TextView serverTime = findViewById(R.id.textView);
-        NTPUDPClient timeClient = new NTPUDPClient();
-        timeClient.setDefaultTimeout(2000);
-        TimeInfo timeInfo;
-        try {
-            InetAddress inetAddress = InetAddress.getByName("time.nist.gov");
-            timeInfo = timeClient.getTime(inetAddress);
-            long NTPTime = timeInfo.getMessage().getTransmitTimeStamp().getTime();
-            Date date = new Date(NTPTime);
-            System.out.println("getTime() returning NTPServer time: " + date);
 
-            //return date;                // Return ntptime
-            return date;
-        } catch (Exception e) {
-            System.out.println("getTime() returning System time: " + new Date());
-            return new Date();            // If exception is thrown return systemtime
-        }
-    }
-
-
-
-
-
-}
