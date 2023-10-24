@@ -1,85 +1,116 @@
 package com.jonas.newcleanapplication;
 
+
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
-import android.util.Log;
+import android.widget.Button;
 import android.widget.TextView;
 
 import androidx.appcompat.app.AppCompatActivity;
 
-import java.sql.Time;
 import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.Objects;
 import java.util.TimeZone;
 
 
-public class MainActivity extends AppCompatActivity {
+public class MainActivity extends AppCompatActivity implements SNTPClient.Listener {
 
-    private TextView ntpTimeTextView;
+    private TextView timeTextView;
+
+    private Button button1;
+    private Button button2;
     //private Object listener;
+
 
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-        // Time text
-        ntpTimeTextView = findViewById(R.id.textView);
-        // TODO: Button
+        timeTextView = findViewById(R.id.textView);
 
+        // Time text
+
+        final Handler handler = new Handler(Objects.requireNonNull(Looper.myLooper()));
+        final Runnable runnable = new Runnable() {
+            @Override
+            public void run() {
+                NTPtime();
+                handler.postDelayed(this, 1000);
+            }
+        };
+        handler.post(runnable);
+        // TODO: Button
+        button1 = findViewById(R.id.button);
+        button1.setOnClickListener( v -> NTPtime());
+
+        button2 = findViewById(R.id.button2);
+        button2.setOnClickListener( v -> setTime());
         //systemTime();
 
-        NTPtime();
 
 
     }
 
+    private void setTime() {
+        Handler mainHandler = new Handler(Looper.getMainLooper());
+        final Date systemDate = new Date();
+        SimpleDateFormat sysSdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+        String sysTime = "Sys time: " + sysSdf.format(systemDate);
+        // Handle errors, update the UI on the main thread
+        mainHandler.post(() -> timeTextView.setText( sysTime));
+
+
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        //NTPtime();
+    }
+
     private void NTPtime(){
-        ntpTimeTextView = findViewById(R.id.textView);
 
         // Create a Handler for the main UI thread
         Handler mainHandler = new Handler(Looper.getMainLooper());
+        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
 
         // Create and start a new thread to fetch NTP time
         Thread ntpThread = new Thread(() -> {
 
             try {
                 SNTPClient.getDate(TimeZone.getTimeZone("Europe/Stockholm"), (rawDate, date, ex) -> {
-                    if (ex == null && date != null) {
-                        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
-                        String ntpTime = "NTP Time: " + sdf.format(date);
 
-                        // Update the UI on the main thread
-                        mainHandler.post(() -> ntpTimeTextView.setText(ntpTime));
+                    String time;
+                    if (ex == null && date != null && rawDate != null) {
+                        time = "NTP time: " + sdf.format(date);
                     } else {
                         final Date systemDate = new Date();
-                        SimpleDateFormat sysSdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
-                        String sysTime = "Sys time: " + sysSdf.format(systemDate);
-                        Log.e("NTPTime", "Error fetching NTP time", ex);
-
-                        // Handle errors, update the UI on the main thread
-                        mainHandler.post(() -> ntpTimeTextView.setText( sysTime));
+                        time = "Sys time: " + sdf.format(systemDate);
                     }
+                    mainHandler.post(() -> timeTextView.setText(time));
                 });
 
             } catch (Exception e) {
-                Date date = new Date();
-                SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
-
-                String systemTime = "System Time " + sdf.format(date);
-                //System.out.println("Systemtime " + date );
                 e.printStackTrace();
 
-                // Handle errors, update the UI on the main thread
-                mainHandler.post(() -> ntpTimeTextView.setText("SystemTime: " +systemTime));
             }
         });
         ntpThread.start();
     }
 
 
+    @Override
+    public void onTimeResponse(String rawDate, Date date, Exception ex) {
 
     }
+
+    @Override
+    public void onPointerCaptureChanged(boolean hasCapture) {
+        super.onPointerCaptureChanged(hasCapture);
+    }
+}
 
 
