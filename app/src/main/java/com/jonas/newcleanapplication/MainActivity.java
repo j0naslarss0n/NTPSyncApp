@@ -57,8 +57,8 @@ public class MainActivity extends AppCompatActivity implements SNTPClient.Listen
     private void setTime() {
         Handler mainHandler = new Handler(Looper.getMainLooper());
         final Date systemDate = new Date();
-        SimpleDateFormat sysSdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
-        String sysTime = "Sys time: " + sysSdf.format(systemDate);
+        SimpleDateFormat sysSdf = new SimpleDateFormat("yyyy-MM-dd \n HH:mm:ss");
+        String sysTime = "System time\n " + sysSdf.format(systemDate);
         // Handle errors, update the UI on the main thread
         mainHandler.post(() -> timeTextView.setText( sysTime));
 
@@ -75,20 +75,20 @@ public class MainActivity extends AppCompatActivity implements SNTPClient.Listen
 
         // Create a Handler for the main UI thread
         Handler mainHandler = new Handler(Looper.getMainLooper());
-        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd \n HH:mm:ss");
 
         // Create and start a new thread to fetch NTP time
         Thread ntpThread = new Thread(() -> {
 
             try {
-                SNTPClient.getDate(TimeZone.getTimeZone("Europe/Stockholm"), (rawDate, date, ex) -> {
+                SNTPClient.getDate(TimeZone.getTimeZone("Asia/Tokyo"), (rawDate, date, ex) -> {
 
                     String time;
-                    if (ex == null && date != null && rawDate != null) {
-                        time = "NTP time: " + sdf.format(date);
+                    if (date != null ) {
+                        time = " NTP time \n" + sdf.format(date);
                     } else {
-                        final Date systemDate = new Date();
-                        time = "Sys time: " + sdf.format(systemDate);
+                        final Date systemTime = new Date();
+                        time = "System time\n " + sdf.format(systemTime);
                     }
                     mainHandler.post(() -> timeTextView.setText(time));
                 });
