@@ -45,7 +45,7 @@ public class MainActivity extends AppCompatActivity implements SNTPClient.Listen
         final Runnable runnable = new Runnable() {
             @Override
             public void run() {
-                NTPtime();
+                getTime();
                 handler.postDelayed(this, 1000);
             }
         };
@@ -73,7 +73,7 @@ public class MainActivity extends AppCompatActivity implements SNTPClient.Listen
     }*/
 
 
-    private void NTPtime(){
+    private void getTime(){
 
         // En handler för main UI tråden
         Handler mainHandler = new Handler(Looper.getMainLooper());
@@ -91,6 +91,7 @@ public class MainActivity extends AppCompatActivity implements SNTPClient.Listen
                     if (date != null ) {
                         // Lägg date i time
                         time = " NTP time \n" + sdf.format(date);
+                        // ändra färg på indikatorn till grön
                         cardView.setBackgroundColor(Color.GREEN);
 
 
@@ -98,6 +99,7 @@ public class MainActivity extends AppCompatActivity implements SNTPClient.Listen
                         //... annars ta system-Date och lägga i time-variabeln
                         final Date systemTime = new Date();
                         time = "System time\n " + sdf.format(systemTime);
+                        // Ändra färg på indikatorn till röd
                         cardView.setBackgroundColor(Color.RED);
                     }
                     // Lägg ut tiden som finns i time
