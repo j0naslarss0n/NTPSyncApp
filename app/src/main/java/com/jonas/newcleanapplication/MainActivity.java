@@ -1,6 +1,7 @@
 package com.jonas.newcleanapplication;
 
 
+import android.graphics.Color;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
@@ -8,6 +9,7 @@ import android.widget.Button;
 import android.widget.TextView;
 
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.cardview.widget.CardView;
 
 import java.text.SimpleDateFormat;
 import java.util.Date;
@@ -17,23 +19,29 @@ import java.util.TimeZone;
 
 public class MainActivity extends AppCompatActivity implements SNTPClient.Listener {
 
+    // Deklarerar texten
     private TextView timeTextView;
+
+    private CardView cardView;
 
     private Button button1;
     private Button button2;
-    //private Object listener;
 
 
 
+
+    // När appen startas
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-        timeTextView = findViewById(R.id.textView);
+        timeTextView = findViewById(R.id.textView); // sätter textrutan
+        cardView = findViewById(R.id.card_view);    // Sätter färgindikation
 
-        // Time text
-
+        // Skemalägger appen  ...
         final Handler handler = new Handler(Objects.requireNonNull(Looper.myLooper()));
+
+        // .. och kör appen i en egen tråd
         final Runnable runnable = new Runnable() {
             @Override
             public void run() {
@@ -41,19 +49,20 @@ public class MainActivity extends AppCompatActivity implements SNTPClient.Listen
                 handler.postDelayed(this, 1000);
             }
         };
+        // Skriver ut NTPtime (om det går)
         handler.post(runnable);
-        // TODO: Button
+        //  Button - som inte skulle vara med tydligen.
+        /*
         button1 = findViewById(R.id.button);
         button1.setOnClickListener( v -> NTPtime());
 
         button2 = findViewById(R.id.button2);
         button2.setOnClickListener( v -> setTime());
-        //systemTime();
-
-
+        */
 
     }
 
+    /* En funktion som avbryter NTPtime och visar systemtiden, hade mest som test.
     private void setTime() {
         Handler mainHandler = new Handler(Looper.getMainLooper());
         final Date systemDate = new Date();
@@ -61,35 +70,37 @@ public class MainActivity extends AppCompatActivity implements SNTPClient.Listen
         String sysTime = "System time\n " + sysSdf.format(systemDate);
         // Handle errors, update the UI on the main thread
         mainHandler.post(() -> timeTextView.setText( sysTime));
+    }*/
 
-
-    }
-
-    @Override
-    protected void onResume() {
-        super.onResume();
-        //NTPtime();
-    }
 
     private void NTPtime(){
 
-        // Create a Handler for the main UI thread
+        // En handler för main UI tråden
         Handler mainHandler = new Handler(Looper.getMainLooper());
         SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd \n HH:mm:ss");
 
-        // Create and start a new thread to fetch NTP time
+        // Ny tråd för att hämta NTP-tiden
         Thread ntpThread = new Thread(() -> {
 
             try {
-                SNTPClient.getDate(TimeZone.getTimeZone("Asia/Tokyo"), (rawDate, date, ex) -> {
+                // Testa att hämta datum/tid
+                SNTPClient.getDate(TimeZone.getTimeZone("Europe/Stockholm"), (rawDate, date, ex) -> {
 
                     String time;
+                    // Om det går att få NTP-tiden, att date inte tom
                     if (date != null ) {
+                        // Lägg date i time
                         time = " NTP time \n" + sdf.format(date);
+                        cardView.setBackgroundColor(Color.GREEN);
+
+
                     } else {
+                        //... annars ta system-Date och lägga i time-variabeln
                         final Date systemTime = new Date();
                         time = "System time\n " + sdf.format(systemTime);
+                        cardView.setBackgroundColor(Color.RED);
                     }
+                    // Lägg ut tiden som finns i time
                     mainHandler.post(() -> timeTextView.setText(time));
                 });
 
@@ -98,6 +109,7 @@ public class MainActivity extends AppCompatActivity implements SNTPClient.Listen
 
             }
         });
+        // Kör tråden ovan
         ntpThread.start();
     }
 
