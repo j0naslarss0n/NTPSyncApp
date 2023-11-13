@@ -51,26 +51,10 @@ public class MainActivity extends AppCompatActivity implements SNTPClient.Listen
         };
         // Skriver ut NTPtime (om det går)
         handler.post(runnable);
-        //  Button - som inte skulle vara med tydligen.
-        /*
-        button1 = findViewById(R.id.button);
-        button1.setOnClickListener( v -> NTPtime());
-
-        button2 = findViewById(R.id.button2);
-        button2.setOnClickListener( v -> setTime());
-        */
 
     }
 
-    /* En funktion som avbryter NTPtime och visar systemtiden, hade mest som test.
-    private void setTime() {
-        Handler mainHandler = new Handler(Looper.getMainLooper());
-        final Date systemDate = new Date();
-        SimpleDateFormat sysSdf = new SimpleDateFormat("yyyy-MM-dd \n HH:mm:ss");
-        String sysTime = "System time\n " + sysSdf.format(systemDate);
-        // Handle errors, update the UI on the main thread
-        mainHandler.post(() -> timeTextView.setText( sysTime));
-    }*/
+
 
 
     private void getTime(){
